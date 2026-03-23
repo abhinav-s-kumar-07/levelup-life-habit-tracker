@@ -1,0 +1,72 @@
+:root{
+  --bg1:#070a1a;
+  --bg2:#141a3b;
+  --card:#0f1433cc;
+  --stroke:#ffffff14;
+  --text:#eaf0ff;
+  --muted:#b9c4ffcc;
+  --accent:#6c7cff;
+  --accent2:#41e2b2;
+}
+
+*{ box-sizing:border-box; }
+body{ color:var(--text); }
+
+.ui-container{ width:min(980px, 92%); margin:0 auto; }
+.ui-card{
+  border:1px solid var(--stroke);
+  background: linear-gradient(180deg, #0f1433bb, #0b1030aa);
+  border-radius:18px;
+  padding:16px;
+  box-shadow: 0 10px 30px #00000035;
+}
+.ui-title{ font-weight:900; letter-spacing:-0.02em; font-size:22px; margin:0; }
+.ui-sub{ color:var(--muted); font-size:13px; line-height:1.6; margin-top:6px; }
+
+.ui-label{ display:block; font-size:12px; color:var(--muted); margin:12px 0 6px; }
+.ui-input{
+  width:100%;
+  border:1px solid var(--stroke);
+  background:#ffffff08;
+  color:var(--text);
+  padding:10px 12px;
+  border-radius:14px;
+  outline:none;
+}
+.ui-input:focus{ border-color:#ffffff2a; background:#ffffff0f; }
+
+.ui-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:14px;
+  padding:10px 14px;
+  font-size:13px;
+  font-weight:800;
+  border:1px solid var(--stroke);
+  background:#ffffff0a;
+  color:var(--text);
+  transition: transform .12s ease, background .12s ease, border-color .12s ease;
+}
+.ui-btn:hover{ transform: translateY(-1px); background:#ffffff14; border-color:#ffffff22; }
+.ui-btn--primary{
+  border:0;
+  color:#0a0f2a;
+  background: linear-gradient(135deg, #6c7cff, #41e2b2);
+}
+
+.ui-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+.ui-help{ margin-top:10px; font-size:12px; color:var(--muted); }
+.ui-help a{ color:#d7ddff; text-decoration:underline; text-underline-offset:3px; }
+
+.icon-sm{ width:18px; height:18px; opacity:.9; }
+/* smoother look */
+.ui-card { backdrop-filter: blur(10px); }
+.ui-input::placeholder { color: rgba(255,255,255,.35); }
+.ui-input { transition: background .12s ease, border-color .12s ease; }
+
+/* better select styling */
+select.ui-input { appearance: none; }
+.ui-input:focus{
+  box-shadow: 0 0 0 4px rgba(108,124,255,.10);
+}
