@@ -41,5 +41,19 @@ Route::get('/feed', [FriendController::class, 'feed']);
 //Route::view('/preview', 'preview');
 
 
+use Illuminate\Support\Facades\Artisan;
 
+Route::get('/init-db', function () {
+    try {
+        // Run migrations
+        Artisan::call('migrate', ['--force' => true]);
+
+        // Seed Super Admin
+        Artisan::call('db:seed', ['--class' => 'SuperAdminSeeder']);
+
+        return "✅ Database migrated and SuperAdmin seeded!";
+    } catch (\Exception $e) {
+        return "❌ Error: " . $e->getMessage();
+    }
+});
 
