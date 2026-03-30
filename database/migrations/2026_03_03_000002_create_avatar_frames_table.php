@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('type'); // png | css
             $table->string('asset')->nullable(); // png filename or css token
             $table->string('unlock_type'); // xp | habit_streak | level | manual
-            $table->integer('requirement_value')->nullable();
+            $table->unsignedBigInteger('requirement_value')->nullable();
             $table->timestamps();
         });
     }
