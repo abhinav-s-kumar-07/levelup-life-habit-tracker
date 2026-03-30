@@ -101,96 +101,99 @@ class HabitController extends Controller
     /* -----------------------------
        Dashboard
     ----------------------------- */
-    public function dashboard(Request $request)
-    {
-        if (!session('user_id')) return redirect('/login');
+ public function dashboard(Request $request)
+{
+    if (!session('user_id')) return redirect('/login');
 
-        $userId = (int) session('user_id');
-        $today  = now()->toDateString();
+    $userId = (int) session('user_id');
+    $today  = now()->toDateString();
+    $weekStart = now()->startOfWeek()->toDateString();
+    $weekEnd   = now()->endOfWeek()->toDateString();
 
-        $weekStart = now()->startOfWeek()->toDateString();
-        $weekEnd   = now()->endOfWeek()->toDateString();
+    // ✅ Fetch habits for this user
+    $habits = DB::table('habits')
+        ->select('id', 'title as habit_name', 'frequency', 'difficulty')
+        ->where('user_id', $userId)
+        ->orderBy('id', 'desc')
+        ->get();
 
-        $habits = DB::table('habits')
-            ->where('user_id', $userId)
-            ->orderBy('id', 'desc')
-            ->get();
+    // ✅ User points
+    $points = (int) (DB::table('rewards')->where('user_id', $userId)->value('points') ?? 0);
 
-        $points = (int) (DB::table('rewards')
-            ->where('user_id', $userId)
-            ->value('points') ?? 0);
+    // ✅ Frame unlock check
+    FrameUnlockService::checkAndUnlock($userId);
 
-        FrameUnlockService::checkAndUnlock($userId);
+    // ✅ Level based on XP
+    $level = $this->levelFromXp($points);
 
-        $level = $this->levelFromXp($points);
+    // ✅ Profile + equipped frame
+    $profile = DB::table('users')
+        ->leftJoin('avatar_frames', 'avatar_frames.id', '=', 'users.equipped_frame_id')
+        ->where('users.id', $userId)
+        ->select(
+            'users.id',
+            'users.name',
+            'users.avatar',
+            'users.is_super_admin',
+            'users.equipped_frame_id',
+            'avatar_frames.type as frame_type',
+            'avatar_frames.asset as frame_asset',
+            'avatar_frames.name as frame_name'
+        )
+        ->first();
 
-        $profile = DB::table('users')
-            ->leftJoin('avatar_frames', 'avatar_frames.id', '=', 'users.equipped_frame_id')
-            ->where('users.id', $userId)
-            ->select(
-                'users.id',
-                'users.name',
-                'users.avatar',
-                'users.is_super_admin',
-                'users.equipped_frame_id',
-                'avatar_frames.type as frame_type',
-                'avatar_frames.asset as frame_asset',
-                'avatar_frames.name as frame_name'
-            )
-            ->first();
+    session(['is_super_admin' => (bool) ($profile->is_super_admin ?? false)]);
 
-        session(['is_super_admin' => (bool) ($profile->is_super_admin ?? false)]);
+    // ✅ Completed today
+    $completedToday = DB::table('habit_logs')
+        ->join('habits', 'habit_logs.habit_id', '=', 'habits.id')
+        ->where('habits.user_id', $userId)
+        ->where('habit_logs.log_date', $today)
+        ->pluck('habit_logs.habit_id')
+        ->toArray();
 
-        // Completed today habit IDs
-        $completedToday = DB::table('habit_logs')
-            ->join('habits', 'habit_logs.habit_id', '=', 'habits.id')
-            ->where('habits.user_id', $userId)
-            ->where('habit_logs.log_date', $today)
-            ->pluck('habit_logs.habit_id')
-            ->toArray();
+    // ✅ Weekly completed
+    $completedThisWeek = DB::table('habit_logs')
+        ->join('habits', 'habit_logs.habit_id', '=', 'habits.id')
+        ->where('habits.user_id', $userId)
+        ->whereBetween('habit_logs.log_date', [$weekStart, $weekEnd])
+        ->where('habit_logs.status', 'done')
+        ->count();
 
-        // Weekly stats
-        $completedThisWeek = DB::table('habit_logs')
-            ->join('habits', 'habit_logs.habit_id', '=', 'habits.id')
-            ->where('habits.user_id', $userId)
-            ->whereBetween('habit_logs.log_date', [$weekStart, $weekEnd])
-            ->where('habit_logs.status', 'done')
-            ->count();
+    $xpThisWeek = $completedThisWeek * 10;
 
-        $xpThisWeek = $completedThisWeek * 10;
-
-        // Streaks map: habitId => streak
-        $streaks = [];
-        foreach ($habits as $h) {
-            $streaks[$h->id] = $this->calculateStreak((int)$h->id);
-        }
-
-        // Tab filter
-        $tab = $request->query('tab', 'all'); // all | done | pending
-
-        $filteredHabits = $habits->filter(function ($h) use ($tab, $completedToday) {
-            $done = in_array($h->id, $completedToday);
-
-            if ($tab === 'done') return $done;
-            if ($tab === 'pending') return !$done;
-            return true;
-        })->values();
-
-        return view('dashboard', [
-            'habits' => $filteredHabits,
-            'points' => $points,
-            'level' => $level,
-            'completedToday' => $completedToday,
-            'streaks' => $streaks,
-            'tab' => $tab,
-            'completedThisWeek' => $completedThisWeek,
-            'xpThisWeek' => $xpThisWeek,
-            'weekStart' => $weekStart,
-            'weekEnd' => $weekEnd,
-            'profile' => $profile,
-        ]);
+    // ✅ Calculate streaks
+    $streaks = [];
+    foreach ($habits as $h) {
+        $streaks[$h->id] = $this->calculateStreak((int)$h->id);
     }
 
+    // ✅ Tab filter
+    $tab = $request->query('tab', 'all'); // all | done | pending
+
+    $filteredHabits = $habits->filter(function ($h) use ($tab, $completedToday) {
+        $done = in_array($h->id, $completedToday);
+
+        if ($tab === 'done') return $done;
+        if ($tab === 'pending') return !$done;
+        return true;
+    })->values();
+
+    // ✅ Return view
+    return view('dashboard', [
+        'habits' => $filteredHabits,
+        'points' => $points,
+        'level' => $level,
+        'completedToday' => $completedToday,
+        'streaks' => $streaks,
+        'tab' => $tab,
+        'completedThisWeek' => $completedThisWeek,
+        'xpThisWeek' => $xpThisWeek,
+        'weekStart' => $weekStart,
+        'weekEnd' => $weekEnd,
+        'profile' => $profile,
+    ]);
+}
     /* -----------------------------
        Add habit
     ----------------------------- */
@@ -215,10 +218,13 @@ class HabitController extends Controller
 
         DB::table('habits')->insert([
             'user_id'    => (int) session('user_id'),
-            'habit_name' => $request->habit_name,
+            'title' => $request->habit_name,
+            'description' => null,
             'frequency'  => $request->frequency,
             'difficulty' => $request->difficulty,
-            'start_date' => now()->toDateString(),
+            'xp_reward' => 10,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         // Optional: log activity for adding habit
@@ -245,6 +251,7 @@ class HabitController extends Controller
 
         // Ensure habit belongs to this user
         $habit = DB::table('habits')
+            ->select('id', 'title as habit_name', 'user_id')
             ->where('id', $id)
             ->where('user_id', $userId)
             ->first();
@@ -327,6 +334,7 @@ class HabitController extends Controller
         $userId = (int) session('user_id');
 
         $habit = DB::table('habits')
+            ->select('id', 'title as habit_name', 'user_id')
             ->where('id', $id)
             ->where('user_id', $userId)
             ->first();
@@ -358,6 +366,7 @@ class HabitController extends Controller
         if (!session('user_id')) return redirect('/login');
 
         $habit = DB::table('habits')
+            ->select('id', 'title as habit_name', 'frequency', 'difficulty')
             ->where('id', $id)
             ->where('user_id', (int) session('user_id'))
             ->first();
@@ -395,9 +404,10 @@ class HabitController extends Controller
         DB::table('habits')
             ->where('id', $id)
             ->update([
-                'habit_name' => $request->habit_name,
+                'title' => $request->habit_name,
                 'frequency'  => $request->frequency,
                 'difficulty' => $request->difficulty,
+                'updated_at' => now(),
             ]);
 
         // Optional: log edit
