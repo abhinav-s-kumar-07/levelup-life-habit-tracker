@@ -39,13 +39,11 @@ Route::post('/friends/remove/{friendshipId}', [FriendController::class, 'remove'
 Route::get('/leaderboard', [FriendController::class, 'leaderboard']);
 Route::get('/feed', [FriendController::class, 'feed']);
 //Route::view('/preview', 'preview');
-
-
 use Illuminate\Support\Facades\Artisan;
 
 Route::get('/init-db', function () {
     try {
-        // Run migrations
+        // Run all migrations on Cloud DB
         Artisan::call('migrate', ['--force' => true]);
 
         // Seed Super Admin
