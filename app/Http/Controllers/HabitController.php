@@ -275,12 +275,23 @@ class HabitController extends Controller
             'habit_id' => (int) $id,
             'log_date' => $today,
             'status'   => 'done',
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
-        // Award XP
+        DB::table('rewards')->updateOrInsert(
+            ['user_id' => $userId],
+            [
+                'points' => 0,
+                'level' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
         DB::table('rewards')
             ->where('user_id', $userId)
-            ->increment('points', 10);
+            ->increment('points', 10, ['updated_at' => now()]);
 
         // Recalculate streak AFTER inserting log
         $streak = $this->calculateStreak((int)$id);
