@@ -10,25 +10,21 @@ return new class extends Migration
      * Run the migrations.
      */
 
- public function up(): void
+public function up(): void
 {
     Schema::create('friendships', function (Blueprint $table) {
         $table->id();
 
-        // IMPORTANT: users.id is SIGNED int(11), so use integer()
-        $table->integer('requester_id');
-        $table->integer('addressee_id');
+        // Correct foreign keys (auto matches users.id)
+        $table->foreignId('requester_id')->constrained('users')->onDelete('cascade');
+        $table->foreignId('addressee_id')->constrained('users')->onDelete('cascade');
 
         $table->enum('status', ['pending', 'accepted'])->default('pending');
 
         $table->timestamps();
 
-        // Prevent duplicate requests in same direction
+        // Prevent duplicate requests
         $table->unique(['requester_id', 'addressee_id']);
-
-        // Foreign keys
-        $table->foreign('requester_id')->references('id')->on('users')->onDelete('cascade');
-        $table->foreign('addressee_id')->references('id')->on('users')->onDelete('cascade');
     });
 }
 
