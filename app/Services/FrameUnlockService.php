@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use Database\Seeders\AvatarFrameSeeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class FrameUnlockService
 {
@@ -16,6 +18,8 @@ class FrameUnlockService
 
     public static function checkAndUnlock(int $userId): array
     {
+        self::ensureDefaultFramesExist();
+
         $xp = (int) (DB::table('rewards')->where('user_id', $userId)->value('points') ?? 0);
         $level = self::levelFromXp($xp);
         $bestStreak = self::bestStreakForUser($userId);
@@ -65,6 +69,19 @@ class FrameUnlockService
         }
 
         return $newlyUnlockedNames;
+    }
+
+    public static function ensureDefaultFramesExist(): void
+    {
+        if (!Schema::hasTable('avatar_frames')) {
+            return;
+        }
+
+        if (DB::table('avatar_frames')->count() > 0) {
+            return;
+        }
+
+        app(AvatarFrameSeeder::class)->run();
     }
 
     private static function bestStreakForUser(int $userId): int
