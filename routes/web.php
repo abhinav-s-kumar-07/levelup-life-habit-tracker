@@ -3,6 +3,9 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FriendController;
 use App\Http\Controllers\HabitController;
+use App\Http\Controllers\PixelAssetController;
+use App\Http\Controllers\ProfileCustomizationController;
+use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\SuperAdminController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +32,9 @@ Route::post('/habit/update/{id}', [HabitController::class, 'update']);
 Route::get('/profile', [AuthController::class, 'profile']);
 Route::post('/profile/name', [AuthController::class, 'updateName']);
 Route::post('/profile/password', [AuthController::class, 'updatePassword']);
+Route::get('/profile/customize', [ProfileCustomizationController::class, 'show']);
+Route::post('/profile/avatar', [ProfileCustomizationController::class, 'updateAvatar']);
+Route::post('/profile/frame', [ProfileCustomizationController::class, 'equipFrame']);
 
 Route::get('/friends', [FriendController::class, 'index']);
 Route::get('/friends/search', [FriendController::class, 'search']);
@@ -39,6 +45,9 @@ Route::post('/friends/remove/{friendshipId}', [FriendController::class, 'remove'
 
 Route::get('/leaderboard', [FriendController::class, 'leaderboard']);
 Route::get('/feed', [FriendController::class, 'feed']);
+Route::get('/u/{id}', [PublicProfileController::class, 'show']);
+Route::get('/pixel/avatar/{filename}', [PixelAssetController::class, 'avatar']);
+Route::get('/pixel/frame/{filename}', [PixelAssetController::class, 'frame']);
 
 Route::get('/admin', [SuperAdminController::class, 'index']);
 Route::get('/admin/frames', [SuperAdminController::class, 'frames']);
