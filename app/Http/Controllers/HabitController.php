@@ -63,6 +63,14 @@ class HabitController extends Controller
     ----------------------------- */
     private function awardBadge(int $userId, int $badgeId): void
     {
+        $badgeExists = DB::table('badges')
+            ->where('id', $badgeId)
+            ->exists();
+
+        if (!$badgeExists) {
+            return;
+        }
+
         $already = DB::table('user_badges')
             ->where('user_id', $userId)
             ->where('badge_id', $badgeId)
@@ -72,7 +80,9 @@ class HabitController extends Controller
             DB::table('user_badges')->insert([
                 'user_id'   => $userId,
                 'badge_id'  => $badgeId,
-                'earned_at' => now()->toDateString(),
+                'earned_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
         }
     }
