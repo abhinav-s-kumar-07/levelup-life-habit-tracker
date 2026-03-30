@@ -21,4 +21,5 @@ public function down(): void
     Schema::table('users', function (Blueprint $table) {
         $table->dropForeign('users_equipped_frame_id_foreign');
     });
-}}
+}
+}

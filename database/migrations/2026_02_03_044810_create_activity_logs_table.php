@@ -14,11 +14,12 @@ public function up(): void
     Schema::create('activity_logs', function (Blueprint $table) {
         $table->id();
 
-        // Correct foreign key
-        $table->foreignId('actor_user_id')->constrained('users')->onDelete('cascade');
+        // FIXED: use foreignId
+        $table->foreignId('actor_user_id')
+              ->constrained('users')
+              ->onDelete('cascade');
 
         $table->string('type', 30);
-
         $table->string('title', 200);
         $table->string('subtitle', 200)->nullable();
         $table->string('icon', 10)->nullable();
