@@ -82,6 +82,8 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
+        $this->ensureConfiguredSuperAdmin($request->email);
+
         $user = DB::table('users')->where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
@@ -110,6 +112,72 @@ class AuthController extends Controller
         FrameUnlockService::checkAndUnlock((int) $user->id);
 
         return redirect('/dashboard');
+    }
+
+    private function ensureConfiguredSuperAdmin(string $email): void
+    {
+        if (!Schema::hasTable('users')) {
+            return;
+        }
+
+        $superAdminEmail = env('SUPERADMIN_EMAIL', 'superadmin@leveluplife.local');
+        if (strcasecmp($email, $superAdminEmail) !== 0) {
+            return;
+        }
+
+        $password = env('SUPERADMIN_PASSWORD', 'Admin@12345');
+        $name = env('SUPERADMIN_NAME', 'Super Admin');
+        $avatar = env('SUPERADMIN_AVATAR', 'avatar1.png');
+        $passwordHash = Hash::make($password);
+
+        $existing = DB::table('users')->where('email', $superAdminEmail)->first();
+
+        if ($existing) {
+            DB::table('users')->where('id', $existing->id)->update([
+                'name' => $name,
+                'password' => $passwordHash,
+                'avatar' => $avatar,
+                'is_super_admin' => true,
+                'updated_at' => now(),
+            ]);
+
+            if (Schema::hasTable('rewards')) {
+                $hasRewards = DB::table('rewards')->where('user_id', $existing->id)->exists();
+                if (!$hasRewards) {
+                    DB::table('rewards')->insert([
+                        'user_id' => $existing->id,
+                        'points' => 0,
+                        'level' => 1,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            return;
+        }
+
+        $userId = DB::table('users')->insertGetId([
+            'name' => $name,
+            'email' => $superAdminEmail,
+            'password' => $passwordHash,
+            'avatar' => $avatar,
+            'is_super_admin' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        if (Schema::hasTable('rewards')) {
+            DB::table('rewards')->updateOrInsert(
+                ['user_id' => $userId],
+                [
+                    'points' => 0,
+                    'level' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+        }
     }
 
     /**
