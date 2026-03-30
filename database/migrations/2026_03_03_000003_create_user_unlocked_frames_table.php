@@ -18,6 +18,10 @@ public function up(): void
         // Correct foreign keys
         $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
         $table->foreignId('frame_id')->constrained('avatar_frames')->onDelete('cascade');
+        $table->foreignId('equipped_frame_id')
+      ->nullable()
+      ->constrained('avatar_frames')
+      ->nullOnDelete();
 
         $table->date('unlocked_at');
         $table->timestamps();
