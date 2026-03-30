@@ -10,13 +10,17 @@ use App\Services\FrameUnlockService;
 
 class AuthController extends Controller
 {
-    // Show registration form
+    /**
+     * Show registration form
+     */
     public function register()
     {
         return view('auth.register');
     }
 
-    // Handle registration
+    /**
+     * Handle registration
+     */
     public function registerUser(Request $request)
     {
         $request->validate([
@@ -25,7 +29,7 @@ class AuthController extends Controller
             'password' => 'required|min:6|confirmed',
         ]);
 
-        // Insert user
+        // Insert user into 'users' table
         $userId = DB::table('users')->insertGetId([
             'name' => $request->name,
             'email' => $request->email,
@@ -35,24 +39,23 @@ class AuthController extends Controller
             'updated_at' => now(),
         ]);
 
-        // Insert rewards safely
+        // Create rewards row safely if table exists
         if (Schema::hasTable('rewards')) {
-            $exists = DB::table('rewards')->where('user_id', $userId)->exists();
-            if (!$exists) {
-                DB::table('rewards')->insert([
-                    'user_id' => $userId,
+            DB::table('rewards')->updateOrInsert(
+                ['user_id' => $userId],
+                [
                     'points' => 0,
                     'level' => 1,
                     'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
+                    'updated_at' => now()
+                ]
+            );
         }
 
-        // Check and unlock frames
+        // Unlock frames if service exists
         FrameUnlockService::checkAndUnlock($userId);
 
-        // Set session
+        // Log in user via session
         session([
             'user_id' => $userId,
             'is_super_admin' => false,
@@ -61,65 +64,75 @@ class AuthController extends Controller
         return redirect('/dashboard');
     }
 
-    // Show login form
+    /**
+     * Show login form
+     */
     public function login()
     {
         return view('auth.login');
     }
 
-    // Handle login
+    /**
+     * Handle login
+     */
     public function loginUser(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
-            'password' => 'required'
+            'password' => 'required',
         ]);
 
         $user = DB::table('users')->where('email', $request->email)->first();
 
-        if ($user && Hash::check($request->password, $user->password)) {
-            // Set session
-            session([
-                'user_id' => $user->id,
-                'is_super_admin' => (bool) ($user->is_super_admin ?? false),
-            ]);
-
-            // Ensure rewards row exists safely
-            if (Schema::hasTable('rewards')) {
-                $exists = DB::table('rewards')->where('user_id', $user->id)->exists();
-                if (!$exists) {
-                    DB::table('rewards')->insert([
-                        'user_id' => $user->id,
-                        'points' => 0,
-                        'level' => 1,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-            }
-
-            FrameUnlockService::checkAndUnlock((int) $user->id);
-
-            return redirect('/dashboard');
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['email' => 'Invalid email or password'])->withInput();
         }
 
-        return back()->withErrors(['email' => 'Invalid email or password'])->withInput();
+        // Log in user via session
+        session([
+            'user_id' => $user->id,
+            'is_super_admin' => (bool) ($user->is_super_admin ?? false),
+        ]);
+
+        // Ensure rewards row exists safely
+        if (Schema::hasTable('rewards')) {
+            DB::table('rewards')->updateOrInsert(
+                ['user_id' => $user->id],
+                [
+                    'points' => 0,
+                    'level' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]
+            );
+        }
+
+        FrameUnlockService::checkAndUnlock((int) $user->id);
+
+        return redirect('/dashboard');
     }
 
-    // Handle logout
+    /**
+     * Handle logout
+     */
     public function logout()
     {
         session()->forget('user_id');
+        session()->forget('is_super_admin');
         session()->flush();
+
         return redirect('/login');
     }
 
-    // Show user profile
+    /**
+     * Show user profile
+     */
     public function profile()
     {
         if (!session('user_id')) return redirect('/login');
 
         $user = DB::table('users')->where('id', session('user_id'))->first();
+
         if (!$user) {
             session()->forget('user_id');
             return redirect('/login');
@@ -134,7 +147,9 @@ class AuthController extends Controller
         return view('profile', compact('user', 'badges'));
     }
 
-    // Update user name
+    /**
+     * Update user name
+     */
     public function updateName(Request $request)
     {
         if (!session('user_id')) return redirect('/login');
@@ -153,7 +168,9 @@ class AuthController extends Controller
         return redirect('/profile')->with('success', 'Name updated successfully.');
     }
 
-    // Update user password
+    /**
+     * Update user password
+     */
     public function updatePassword(Request $request)
     {
         if (!session('user_id')) return redirect('/login');

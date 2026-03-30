@@ -6,6 +6,8 @@
 <section class="section">
   <div class="wrap" style="max-width:980px;">
     <div style="display:grid; grid-template-columns: 1.05fr .95fr; gap:14px; align-items:start;">
+
+      <!-- Left panel -->
       <div class="panel" data-reveal>
         <div class="hLabel">Welcome back</div>
         <div class="hTitle">Sign in to continue</div>
@@ -31,20 +33,14 @@
         </div>
       </div>
 
+      <!-- Right panel: login form -->
       <div class="panel" data-reveal>
         <h2 class="cardTitle">Login</h2>
         <div class="muted" style="margin-top:6px;">Enter your account credentials.</div>
 
-        @if(session('error'))
-          <div class="alert" style="margin-top:12px;">
-            <div style="font-weight:900;">Login failed</div>
-            <div class="muted" style="margin-top:6px;">{{ session('error') }}</div>
-          </div>
-        @endif
-
         @if ($errors->any())
           <div class="alert" style="margin-top:12px;">
-            <div style="font-weight:900;">Validation error</div>
+            <div style="font-weight:900;">Login failed</div>
             <ul class="muted" style="margin:8px 0 0 18px;">
               @foreach ($errors->all() as $error)
                 <li>{{ $error }}</li>
@@ -58,22 +54,23 @@
 
           <div>
             <label class="fieldLabel">Email</label>
-            <input type="email" name="email" value="{{ old('email') }}" placeholder="you@example.com" class="textInput">
+            <input type="email" name="email" value="{{ old('email') }}" placeholder="you@example.com" class="textInput" required>
           </div>
 
           <div>
             <label class="fieldLabel">Password</label>
-            <input type="password" name="password" placeholder="********" class="textInput">
+            <input type="password" name="password" placeholder="********" class="textInput" required>
           </div>
 
           <button class="btn primary" type="submit" style="width:100%;">Sign in</button>
 
-          <div class="muted" style="font-size:13px;">
-            New here?
+          <div class="muted" style="font-size:13px; margin-top:6px;">
+            New here? 
             <a href="{{ url('/register') }}" style="color:var(--text); font-weight:800;">Create an account</a>
           </div>
         </form>
       </div>
+
     </div>
   </div>
 </section>
