@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Support\Facades\Schema;
 class SuperAdminSeeder extends Seeder
 {
     public function run(): void
@@ -41,6 +41,19 @@ class SuperAdminSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+if (Schema::hasTable('rewards')) {
+    $hasRewards = DB::table('rewards')->where('user_id', $userId)->exists();
+    if (!$hasRewards) {
+        DB::table('rewards')->insert([
+            'user_id' => $userId,
+            'points' => 0,
+            'level' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+}
         }
     }
 }
