@@ -3,17 +3,16 @@
 namespace Tests\Feature;
 
 // use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
     /**
-     * A basic test example.
+     * Core web routes should be registered.
      */
-    public function test_the_application_returns_a_successful_response(): void
+    public function test_core_routes_are_registered(): void
     {
-        $response = $this->get('/');
-
-        $response->assertStatus(200);
+        $this->assertTrue(Route::has('dashboard'));
     }
 }

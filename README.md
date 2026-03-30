@@ -57,3 +57,25 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Laravel Cloud Deployment
+
+1. Create a Laravel Cloud project connected to this repository.
+2. Provision a managed database in Laravel Cloud.
+3. Set production environment variables in Laravel Cloud:
+   `APP_ENV=production`
+   `APP_DEBUG=false`
+   `APP_URL=https://your-domain`
+   `APP_KEY=base64:...`
+   `DB_CONNECTION=mysql`
+   `DB_HOST=...`
+   `DB_PORT=3306`
+   `DB_DATABASE=...`
+   `DB_USERNAME=...`
+   `DB_PASSWORD=...`
+4. Use a deploy command that runs migrations safely:
+   `php artisan migrate --force --seed`
+5. Build frontend assets during deploy:
+   `npm ci && npm run build`
+
+Do not expose migrations or seeders through public routes in production. Also make sure `.env`, `vendor`, and other generated files are not committed.
