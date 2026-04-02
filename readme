@@ -1,0 +1,84 @@
+# LevelUp Life - Gamified Habit Tracker
+
+## Description
+LevelUp Life is a web-based habit tracking application built using Laravel. It incorporates gamification concepts such as experience points (XP), levels, streaks, badges, and avatar customization to motivate users to build and maintain positive habits.
+
+## Features
+- User authentication (login and registration)
+- Create, update, and delete habits
+- Track daily habit completion
+- XP and leveling system
+- Streak tracking for consistency
+- Badge and reward system
+- Avatar customization with unlockable frames
+- Public user profiles
+- Social features including friends, leaderboard, and activity feed
+- Admin panel for managing avatar frames
+
+## Tech Stack
+- Backend: Laravel (PHP)
+- Frontend: Blade, HTML, CSS
+- Database: MySQL
+- Tools: XAMPP, Git
+
+## Database Structure
+Main tables used in the system:
+- users
+- habits
+- habit_logs
+- badges
+- user_badges
+- rewards
+- friendships
+- activity_logs
+- avatar_frames
+- user_unlocked_frames
+
+## Installation and Setup
+
+1. Clone the repository:
+   git clone https://github.com/abhinav-s-kumar-07/levelup-life-habit-tracker.git
+
+2. Navigate to the project folder:
+   cd levelup-life-habit-tracker
+
+3. Install dependencies:
+   composer install
+
+4. Copy the environment file:
+   cp .env.example .env
+
+5. Configure database in .env file
+
+6. Generate application key:
+   php artisan key:generate
+
+7. Run migrations:
+   php artisan migrate
+
+8. Start the server:
+   php artisan serve
+
+## Usage
+- Register a new account or log in
+- Create habits and track them daily
+- Earn XP and level up based on consistency
+- Unlock badges and avatar frames
+- View progress through dashboard and public profile
+
+## Learning Outcomes
+- Practical implementation of Laravel MVC architecture
+- Database design and relationship management
+- Authentication and authorization in web applications
+- Gamification concepts in software design
+- Building full-stack web applications
+
+## Future Improvements
+- Mobile responsiveness improvements
+- Notifications and reminders
+- Advanced analytics dashboard
+- API integration for mobile app support
+
+## Author
+Abhinav S Kumar  
+GitHub: https://github.com/abhinav-s-kumar-07
